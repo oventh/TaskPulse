@@ -1,0 +1,18 @@
+version: "3.8"
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: taskpulse-backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      TASKPULSE_DB_HOST: als-01.tatta.cn
+      TASKPULSE_DB_PORT: 8036
+      TASKPULSE_DB_USER: dbuser
+      TASKPULSE_DB_PASSWORD: Tata@1234
+      TASKPULSE_DB_NAME: taskpulse
+      TASKPULSE_DEBUG: "false"

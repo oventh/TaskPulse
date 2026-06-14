@@ -1,0 +1,232 @@
+/* ── TaskPulse Global Theme ─────────────────────── */
+
+:root {
+  --bg-primary: #0a0a0f;
+  --bg-card: #13131f;
+  --bg-card-hover: #1a1a2e;
+  --bg-elevated: #1e1e32;
+  --border-color: rgba(255,255,255,0.06);
+  --border-hover: rgba(255,255,255,0.1);
+  --text-primary: #e8e8f0;
+  --text-secondary: rgba(255,255,255,0.5);
+  --text-muted: rgba(255,255,255,0.3);
+  --accent-1: #667eea;
+  --accent-2: #764ba2;
+  --accent-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --info: #6366f1;
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #app {
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', 'Inter', Roboto, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Scrollbar ─────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.08);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.15);
+}
+
+/* ── Element Plus Overrides ────────────────────── */
+
+/* Cards */
+.el-card {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: var(--radius) !important;
+  color: var(--text-primary) !important;
+}
+.el-card__header {
+  padding: 16px 20px !important;
+  border-bottom: 1px solid var(--border-color) !important;
+}
+.el-card__body {
+  padding: 20px !important;
+}
+
+/* Tables */
+.el-table {
+  --el-table-bg-color: transparent !important;
+  --el-table-tr-bg-color: transparent !important;
+  --el-table-header-bg-color: rgba(255,255,255,0.02) !important;
+  --el-table-row-hover-bg-color: rgba(255,255,255,0.04) !important;
+  --el-table-border-color: var(--border-color) !important;
+  --el-table-text-color: var(--text-primary) !important;
+  --el-table-header-text-color: var(--text-secondary) !important;
+  background: transparent !important;
+  color: var(--text-primary) !important;
+}
+.el-table th.el-table__cell {
+  background: rgba(255,255,255,0.02) !important;
+  border-bottom: 1px solid var(--border-color) !important;
+  color: var(--text-secondary) !important;
+  font-weight: 500 !important;
+  font-size: 12px !important;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.el-table td.el-table__cell {
+  border-bottom: 1px solid var(--border-color) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Tags */
+.el-tag {
+  border: none !important;
+  font-weight: 500 !important;
+}
+.el-tag--success {
+  background: rgba(34,197,94,0.15) !important;
+  color: #4ade80 !important;
+}
+.el-tag--danger {
+  background: rgba(239,68,68,0.15) !important;
+  color: #f87171 !important;
+}
+.el-tag--warning {
+  background: rgba(245,158,11,0.15) !important;
+  color: #fbbf24 !important;
+}
+.el-tag--info {
+  background: rgba(255,255,255,0.06) !important;
+  color: var(--text-secondary) !important;
+}
+
+/* Buttons */
+.el-button--primary {
+  --el-button-bg-color: var(--accent-1) !important;
+  --el-button-border-color: var(--accent-1) !important;
+  --el-button-hover-bg-color: #7c8ff0 !important;
+  --el-button-hover-border-color: #7c8ff0 !important;
+  border-radius: var(--radius-sm) !important;
+}
+.el-button--small {
+  border-radius: 6px !important;
+}
+.el-button.is-text {
+  color: var(--accent-1) !important;
+}
+.el-button.is-text.is-danger {
+  color: var(--danger) !important;
+}
+
+/* Dialog */
+.el-dialog {
+  --el-dialog-bg-color: var(--bg-card) !important;
+  --el-dialog-border-color: var(--border-color) !important;
+  border-radius: var(--radius) !important;
+  border: 1px solid var(--border-color) !important;
+}
+.el-dialog__title {
+  color: var(--text-primary) !important;
+}
+.el-dialog__body {
+  color: var(--text-secondary) !important;
+}
+
+/* Form */
+.el-form-item__label {
+  color: var(--text-secondary) !important;
+}
+.el-input {
+  --el-input-bg-color: rgba(255,255,255,0.04) !important;
+  --el-input-border-color: var(--border-color) !important;
+  --el-input-text-color: var(--text-primary) !important;
+  --el-input-hover-border-color: var(--accent-1) !important;
+  --el-input-focus-border-color: var(--accent-1) !important;
+}
+.el-input__inner {
+  background: rgba(255,255,255,0.04) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+}
+.el-select {
+  --el-select-input-focus-border-color: var(--accent-1) !important;
+}
+.el-select-dropdown {
+  background: var(--bg-elevated) !important;
+  border: 1px solid var(--border-color) !important;
+}
+.el-select-dropdown__item {
+  color: var(--text-primary) !important;
+}
+.el-select-dropdown__item.hover {
+  background: rgba(255,255,255,0.06) !important;
+}
+
+/* Switch */
+.el-switch {
+  --el-switch-on-color: var(--accent-1) !important;
+}
+
+/* Radio */
+.el-radio-group {
+  --el-radio-button-checked-bg-color: var(--accent-1) !important;
+  --el-radio-button-checked-border-color: var(--accent-1) !important;
+}
+.el-radio-button__inner {
+  background: rgba(255,255,255,0.04) !important;
+  color: var(--text-secondary) !important;
+  border-color: var(--border-color) !important;
+}
+.el-radio-button__original-radio:checked + .el-radio-button__inner {
+  background: var(--accent-1) !important;
+  color: #fff !important;
+}
+
+/* Descriptions */
+.el-descriptions {
+  --el-descriptions-table-bg: transparent !important;
+  --el-descriptions-item-bg: transparent !important;
+}
+.el-descriptions__title {
+  color: var(--text-primary) !important;
+}
+.el-descriptions__label {
+  color: var(--text-secondary) !important;
+  background: rgba(255,255,255,0.02) !important;
+}
+.el-descriptions__content {
+  color: var(--text-primary) !important;
+  background: transparent !important;
+}
+.el-descriptions__cell {
+  border-color: var(--border-color) !important;
+}
+
+/* Input number */
+.el-input-number {
+  --el-input-number-controls-height: 100% !important;
+}
+
+/* Message */
+.el-message {
+  --el-message-bg-color: var(--bg-elevated) !important;
+  --el-message-border-color: var(--border-color) !important;
+  --el-message-text-color: var(--text-primary) !important;
+  border: 1px solid var(--border-color) !important;
+  backdrop-filter: blur(12px) !important;
+}
