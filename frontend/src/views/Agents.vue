@@ -51,7 +51,7 @@
                 </span>
               </td>
               <td class="cell-mono">{{ a.task_count }}</td>
-              <td class="cell-mono">{{ a.last_heartbeat_at ? dayjs(a.last_heartbeat_at).format('MM-DD HH:mm') : '—' }}</td>
+              <td class="cell-mono">{{ a.last_heartbeat_at ? beijing(a.last_heartbeat_at) : '—' }}</td>
               <td>
                 <code class="cell-key">{{ a.api_key.substring(0, 16) }}...</code>
                 <button class="btn-icon" @click="copyKey(a.api_key)" title="复制 API Key">
@@ -74,7 +74,7 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import dayjs from 'dayjs'
+import { beijing } from '../utils/time.js'
 import { listAgents, getSystemConfig } from '../api/index.js'
 
 const agents = ref([])

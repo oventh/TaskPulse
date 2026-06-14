@@ -50,7 +50,7 @@ async def update_agent(agent_id: int, body: AgentUpdate, db: AsyncSession = Depe
 
 
 @router.post("/{agent_id}/heartbeat", response_model=AgentOut)
-async def heartbeat(agent_id: int, body: AgentHeartbeat, db: AsyncSession = Depends(get_db)):
+async def heartbeat(agent_id: int, db: AsyncSession = Depends(get_db)):
     svc = AgentService(db)
     agent = await svc.heartbeat(agent_id)
     if not agent:

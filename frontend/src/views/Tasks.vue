@@ -1,11 +1,18 @@
 <template>
   <div class="tasks-page">
     <div class="section mb-24">
-      <div class="section-header">
+      <div class="section-header collapsible" @click="showGuide = !showGuide">
         <h3>定时任务 — 由 AI Agent 自动管理</h3>
+        <div class="section-toggle">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               :style="{ transform: showGuide ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+          <span class="toggle-label">{{ showGuide ? '收起指令' : '展开指令' }}</span>
+        </div>
       </div>
-      <div class="onboard-body">
-        <p>Agent 注册后，通过下方 API 汇报任务执行情况，无需手动创建。</p>
+      <div v-if="showGuide" class="onboard-body">
+        <p>将下方指令发送给您的 AI Agent，它会自动汇报执行结果并管理定时任务。</p>
         <div class="code-block">
           <div class="code-tabs">
             <button :class="{ active: tab === 'report' }" @click="tab = 'report'">汇报执行</button>
@@ -51,7 +58,7 @@
                   {{ t.status === 'active' ? '运行中' : t.status === 'paused' ? '已暂停' : '已停止' }}
                 </span>
               </td>
-              <td class="cell-mono">{{ t.last_run_at ? dayjs(t.last_run_at).format('MM-DD HH:mm') : '—' }}</td>
+              <td class="cell-mono">{{ t.last_run_at ? beijing(t.last_run_at) : '—' }}</td>
               <td>
                 <span v-if="t.last_run_result" class="tag" :class="t.last_run_result === 'success' ? 'tag-green' : 'tag-red'">
                   {{ t.last_run_result === 'success' ? '成功' : '失败' }}
@@ -78,11 +85,12 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import dayjs from 'dayjs'
+import { beijing } from '../utils/time.js'
 import { listTasks, deleteTask, getSystemConfig } from '../api/index.js'
 
 const tasks = ref([])
 const tab = ref('report')
+const showGuide = ref(false)
 const baseUrl = ref(window.location.origin)
 
 const loadData = async () => {
@@ -106,17 +114,120 @@ const handleDelete = async (row) => {
 const codes = computed(() => {
   const b = baseUrl.value
   return {
-    report: `curl -X POST ${b}/api/tasks/<TASK_ID>/executions \\
+    report: `# TaskPulse — 汇报执行结果
+
+你已注册到 TaskPulse。每次任务运行后（无论成功失败），主动汇报执行结果。
+
+## 汇报成功
+
+curl -X POST ${b}/api/tasks/<TASK_ID>/executions \\
   -H "Content-Type: application/json" \\
-  -H "Authorization: Bearer <YOUR_API_KEY>" \\
-  -d '{"status":"success","duration_ms":2500,"log":"done"}'`,
-    register: `curl -X POST "${b}/api/tasks?agent_id=<AGENT_ID>" \\
+  -H "Authorization: Bearer <API_KEY>" \\
+  -d '{"status":"success","duration_ms":2500,"log":"[INFO] 任务执行完成，同步了100条记录"}'
+
+## 汇报失败
+
+curl -X POST ${b}/api/tasks/<TASK_ID>/executions \\
   -H "Content-Type: application/json" \\
-  -H "Authorization: Bearer <YOUR_API_KEY>" \\
-  -d '{"name":"data-sync","cron_expression":"*/5 * * * *","grace_period":300}'`,
-    batch: `curl -X POST ${b}/api/agents/register-with-tasks \\
+  -H "Authorization: Bearer <API_KEY>" \\
+  -d '{"status":"failed","duration_ms":1200,"log":"[ERROR] 连接超时","error_message":"TimeoutError: connection to DB timed out"}'
+
+## 修改你的代码自动汇报
+
+在你的每个定时任务函数末尾，加上汇报逻辑。参考以下实现：
+
+import time
+import requests
+
+def run_task(task_func, task_id, api_key):
+    """包裹你的任务函数，自动汇报执行结果"""
+    start = time.time()
+    try:
+        result = task_func()
+        elapsed = int((time.time() - start) * 1000)
+        requests.post(f"${b}/api/tasks/{task_id}/executions",
+            headers={"Authorization": f"Bearer {api_key}"},
+            json={"status": "success", "duration_ms": elapsed, "log": str(result)})
+    except Exception as e:
+        elapsed = int((time.time() - start) * 1000)
+        requests.post(f"${b}/api/tasks/{task_id}/executions",
+            headers={"Authorization": f"Bearer {api_key}"},
+            json={"status": "failed", "duration_ms": elapsed, "error_message": str(e)})
+
+# 在你的循环/调度中这样使用：
+run_task(my_task_func, TASK_ID, API_KEY)`,
+    register: `# TaskPulse — 注册新任务
+
+你需要注册自己管理的每一个定时任务，系统才知道你的执行计划。
+
+## 单个注册
+
+curl -X POST "${b}/api/tasks?agent_id=<AGENT_ID>" \\
   -H "Content-Type: application/json" \\
-  -d '{"name":"agent","tasks":[{"name":"sync","cron_expression":"*/5 * * * *"}]}'`,
+  -H "Authorization: Bearer <API_KEY>" \\
+  -d '{"name":"数据同步","cron_expression":"*/5 * * * *","description":"每5分钟同步一次数据","grace_period":300}'
+
+参数说明：
+- name: 任务名称（必填）
+- cron_expression: Cron 表达式，格式：分 时 日 月 周（必填）
+- description: 任务描述（可选）
+- grace_period: 容忍窗口（秒），任务超时N秒未执行则告警（默认300）
+
+## 查看已注册的任务
+
+curl -X GET "${b}/api/tasks" \\
+  -H "Authorization: Bearer <API_KEY>"
+
+## 更新现有任务（修改 cron 等）
+
+curl -X PUT "${b}/api/tasks/<TASK_ID>" \\
+  -H "Content-Type: application/json" \\
+  -H "Authorization: Bearer <API_KEY>" \\
+  -d '{"cron_expression":"0 * * * *","status":"active"}'
+
+## 删除任务
+
+curl -X DELETE "${b}/api/tasks/<TASK_ID>" \\
+  -H "Authorization: Bearer <API_KEY>"`,
+    batch: `# TaskPulse — 批量注册（推荐）
+
+如果你有多个定时任务，推荐使用批量注册接口，一次完成 Agent 注册 + 所有任务登记。
+
+## 批量注册 Agent + 全部任务
+
+curl -X POST ${b}/api/agents/register-with-tasks \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "name": "<你的Agent名称>",
+    "description": "<你的职责描述>",
+    "tasks": [
+      {"name": "数据同步", "cron_expression": "*/5 * * * *", "description": "定时同步数据", "grace_period": 300},
+      {"name": "日报通知", "cron_expression": "0 9 * * *", "description": "每天早上9点生成报告", "grace_period": 600},
+      {"name": "周报汇总", "cron_expression": "0 10 * * 1", "description": "每周一早10点汇总", "grace_period": 900}
+    ]
+  }'
+
+响应中包含 agent 信息和任务创建数量。返回的 api_key 请保存好。
+
+## Python 示例
+
+import requests
+
+resp = requests.post(f"${b}/api/agents/register-with-tasks", json={
+    "name": "data-agent",
+    "description": "数据相关的全部定时任务",
+    "tasks": [
+        {"name": "sync-data", "cron_expression": "*/5 * * * *"},
+        {"name": "daily-report", "cron_expression": "0 9 * * *"}
+    ]
+})
+result = resp.json()
+print(f"Agent ID: {result['agent']['id']}, 任务数: {result['tasks_created']}")
+API_KEY = result["agent"]["api_key"]
+
+---
+
+注册完成后，回到仪表盘页面，将「汇报执行结果」的指令一并发送给 AI Agent，它就知道如何自动向你汇报运行状态。`,
   }
 })
 
@@ -146,6 +257,13 @@ onMounted(loadData)
   border-bottom: 1px solid var(--border-color);
 }
 .section-header h3 { font-size: 15px; font-weight: 600; color: #e0e0f0; margin: 0; }
+.section-header.collapsible { cursor: pointer; user-select: none; }
+.section-header.collapsible:hover { background: rgba(255,255,255,0.02); }
+.section-toggle {
+  display: flex; align-items: center; gap: 6px;
+  color: var(--text-muted); font-size: 12px;
+}
+.section-toggle:hover { color: var(--text-secondary); }
 
 .onboard-body { padding: 20px; }
 .onboard-body > p { font-size: 13px; color: var(--text-secondary); margin-bottom: 16px; }

@@ -20,7 +20,7 @@
                 {{ a.alert_type === 'missed_run' ? '未按时执行' : '执行失败' }}
               </span>
               <span class="alert-task">{{ a.task_name || '未知任务' }}</span>
-              <span class="alert-time">{{ dayjs(a.created_at).format('MM-DD HH:mm') }}</span>
+              <span class="alert-time">{{ beijing(a.created_at) }}</span>
             </div>
             <div class="alert-msg">{{ a.message }}</div>
             <div class="alert-bottom">
@@ -42,7 +42,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import dayjs from 'dayjs'
+import { beijing } from '../utils/time.js'
 import { listAlerts, acknowledgeAlert } from '../api/index.js'
 
 const alerts = ref([])

@@ -16,7 +16,7 @@
         <div class="detail-item"><span class="detail-label">Agent</span><span class="detail-value">{{ task.agent_name }}</span></div>
         <div class="detail-item"><span class="detail-label">Cron</span><code class="detail-code">{{ task.cron_expression }}</code></div>
         <div class="detail-item"><span class="detail-label">容忍窗口</span><span class="detail-value">{{ task.grace_period }}s</span></div>
-        <div class="detail-item"><span class="detail-label">最近运行</span><span class="detail-value mono">{{ task.last_run_at ? dayjs(task.last_run_at).format('YYYY-MM-DD HH:mm:ss') : '—' }}</span></div>
+        <div class="detail-item"><span class="detail-label">最近运行</span><span class="detail-value mono">{{ task.last_run_at ? beijing(task.last_run_at, 'YYYY-MM-DD HH:mm:ss') : '—' }}</span></div>
         <div class="detail-item">
           <span class="detail-label">最近结果</span>
           <span v-if="task.last_run_result" class="tag" :class="task.last_run_result === 'success' ? 'tag-green' : 'tag-red'">
@@ -25,7 +25,7 @@
           <span v-else class="detail-value">—</span>
         </div>
         <div class="detail-item"><span class="detail-label">执行次数</span><span class="detail-value mono">{{ task.total_run_count }}</span></div>
-        <div class="detail-item"><span class="detail-label">预计下次</span><span class="detail-value mono">{{ task.next_run_at ? dayjs(task.next_run_at).format('YYYY-MM-DD HH:mm:ss') : '待计算' }}</span></div>
+        <div class="detail-item"><span class="detail-label">预计下次</span><span class="detail-value mono">{{ task.next_run_at ? beijing(task.next_run_at, 'YYYY-MM-DD HH:mm:ss') : '待计算' }}</span></div>
         <div class="detail-item"><span class="detail-label">描述</span><span class="detail-value">{{ task.description || '无' }}</span></div>
       </div>
     </div>
@@ -55,7 +55,7 @@
                   {{ e.status === 'success' ? '成功' : e.status === 'failed' ? '失败' : '运行中' }}
                 </span>
               </td>
-              <td class="cell-mono">{{ dayjs(e.started_at).format('MM-DD HH:mm:ss') }}</td>
+              <td class="cell-mono">{{ beijing(e.started_at, 'MM-DD HH:mm:ss') }}</td>
               <td class="cell-mono">{{ e.duration_ms ?? '—' }}</td>
               <td class="cell-muted cell-ellipsis">{{ e.result || '—' }}</td>
               <td><button class="cell-link-btn" @click="showLog(e)">日志</button></td>
@@ -86,7 +86,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import dayjs from 'dayjs'
+import { beijing } from '../utils/time.js'
 import { getTask, listExecutions } from '../api/index.js'
 
 const route = useRoute()

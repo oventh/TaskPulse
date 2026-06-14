@@ -125,7 +125,7 @@
                   {{ t.status === 'active' ? '运行中' : t.status === 'paused' ? '已暂停' : '已停止' }}
                 </span>
               </td>
-              <td class="cell-mono">{{ t.last_run_at ? dayjs(t.last_run_at).format('MM-DD HH:mm') : '—' }}</td>
+              <td class="cell-mono">{{ t.last_run_at ? beijing(t.last_run_at) : '—' }}</td>
               <td>
                 <span v-if="t.last_run_result" class="tag" :class="t.last_run_result === 'success' ? 'tag-green' : 'tag-red'">
                   {{ t.last_run_result === 'success' ? '成功' : '失败' }}
@@ -149,7 +149,7 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import dayjs from 'dayjs'
+import { beijing } from '../utils/time.js'
 import { getDashboardSummary, getDashboardTasks, getSystemConfig } from '../api/index.js'
 
 const summary = ref({
@@ -167,62 +167,150 @@ const baseUrl = ref(window.location.origin)
 
 const curlScript = computed(() => {
   const b = baseUrl.value
-  return `# 让 AI Agent 执行以下命令注册自己：
+  return `# TaskPulse 接入指引 — 请 AI Agent 执行以下步骤
+
+你正在被接入 TaskPulse（定时任务监控系统），完成后你将拥有统一的运行状态看板和超时告警能力。请按步骤操作，无需用户额外干预。
+
+## 第 1 步：注册你自己
+
+向 TaskPulse 注册你的 Agent 身份，系统会返回专属 API Key：
+
 curl -X POST ${b}/api/agents \\
   -H "Content-Type: application/json" \\
-  -d '{"name": "my-agent", "description": "我的 AI Agent"}'
+  -d '{"name": "<你的名字>", "description": "<你的职责描述>"}'
 
-# 保存返回的 api_key，后续汇报用
+响应中"api_key"字段即你的凭证，请妥善保存，后续所有请求都需要通过
+Authorization: Bearer <api_key> 鉴权。
 
-# 注册定时任务（替换 YOUR_API_KEY）：
-curl -X POST "${b}/api/tasks?agent_id=<ID>" \\
+## 第 2 步：注册定时任务
+
+逐一注册你管理的每一个定时任务，描述清楚执行周期和用途：
+
+curl -X POST "${b}/api/tasks?agent_id=<AGENT_ID>" \\
   -H "Content-Type: application/json" \\
-  -H "Authorization: Bearer <YOUR_API_KEY>" \\
+  -H "Authorization: Bearer <API_KEY>" \\
+  -d '{"name": "任务名称", "cron_expression": "*/5 * * * *", "grace_period": 300}'
+
+如果你有多个任务，推荐使用批量注册接口，一次完成：
+
+curl -X POST ${b}/api/agents/register-with-tasks \\
+  -H "Content-Type: application/json" \\
   -d '{
-    "name": "data-sync",
-    "cron_expression": "*/5 * * * *",
-    "grace_period": 300
+    "name": "<你的名字>",
+    "tasks": [
+      {"name": "sync-data", "cron_expression": "*/5 * * * *"},
+      {"name": "daily-report", "cron_expression": "0 9 * * *"}
+    ]
   }'
 
-# 执行后汇报：
+## 第 3 步：修改你的代码 — 每次执行后主动汇报
+
+这是最关键的一步。修改你的任务执行逻辑，在每次执行完毕后（无论成功还是失败）主动向 TaskPulse 汇报结果，这样看板才能展示实时状态。
+
+在你的任务执行代码末尾，加上以下逻辑：
+
+# 任务执行成功后立即调用
 curl -X POST "${b}/api/tasks/<TASK_ID>/executions" \\
   -H "Content-Type: application/json" \\
-  -H "Authorization: Bearer <YOUR_API_KEY>" \\
-  -d '{
-    "status": "success",
-    "duration_ms": 1500,
-    "log": "任务执行完毕"
-  }'`
+  -H "Authorization: Bearer <API_KEY>" \\
+  -d '{"status": "success", "duration_ms": <耗时毫秒>, "log": "<执行日志>"}'
+
+# 任务执行失败时调用
+curl -X POST "${b}/api/tasks/<TASK_ID>/executions" \\
+  -H "Content-Type: application/json" \\
+  -H "Authorization: Bearer <API_KEY>" \\
+  -d '{"status": "failed", "duration_ms": <耗时>, "log": "<日志>", "error_message": "<错误信息>"}'
+
+## 第 4 步：保持活跃
+
+定期发送心跳，让系统知道你仍在运行：
+
+curl -X POST ${b}/api/agents/<AGENT_ID>/heartbeat \\
+  -H "Authorization: Bearer <API_KEY>"
+
+---
+完成以上步骤后，前往 TaskPulse 看板（本页面）查看你的运行状态和执行历史。如配置了通知渠道，任务超时未执行时系统会自动告警。`
 })
 
 const pythonScript = computed(() => {
   const b = baseUrl.value
-  return `import requests
+  return `# TaskPulse 接入指引 — 请 AI Agent 执行以下步骤
+
+你正在被接入 TaskPulse（定时任务监控系统），完成后你将拥有统一的运行状态看板和超时告警能力。请按步骤操作，无需用户额外干预。
+
+## 第 1 步：注册你自己
+
+向 TaskPulse 注册你的 Agent 身份，系统会返回专属 API Key：
+
+import requests
 
 BASE = "${b}"
 
-# 1. AI Agent 注册自己
 resp = requests.post(f"{BASE}/api/agents", json={
-    "name": "my-agent",
-    "description": "我的 AI Agent"
+    "name": "<你的名字>",
+    "description": "<你的职责描述>"
 })
 agent = resp.json()
-API_KEY = agent["api_key"]  # 保存此 Key
+API_KEY = agent["api_key"]   # 保存此 Key，后续所有请求通过 Bearer 鉴权
 AGENT_ID = agent["id"]
 
-# 2. 注册定时任务
+## 第 2 步：注册定时任务
+
+逐一注册你管理的每一个定时任务，描述清楚执行周期和用途：
+
 resp = requests.post(f"{BASE}/api/tasks",
     params={"agent_id": AGENT_ID},
     headers={"Authorization": f"Bearer {API_KEY}"},
-    json={"name": "data-sync", "cron_expression": "*/5 * * * *"}
+    json={"name": "sync-data", "cron_expression": "*/5 * * * *", "grace_period": 300}
 )
 task = resp.json()
 TASK_ID = task["id"]
 
-# 3. 每次执行后汇报
-requests.post(f"{BASE}/api/tasks/{TASK_ID}/executions",
-    headers={"Authorization": f"Bearer {API_KEY}"},
-    json={"status": "success", "duration_ms": 1500, "log": "done"})`
+如果你有多个任务，推荐使用批量注册接口，一次完成：
+
+resp = requests.post(f"{BASE}/api/agents/register-with-tasks",
+    json={
+        "name": "<你的名字>",
+        "tasks": [
+            {"name": "sync-data", "cron_expression": "*/5 * * * *"},
+            {"name": "daily-report", "cron_expression": "0 9 * * *"}
+        ]
+    }
+)
+
+## 第 3 步：修改你的代码 — 每次执行后主动汇报
+
+这是最关键的一步。修改你的任务执行逻辑，在每次执行完毕后（无论成功还是失败）主动向 TaskPulse 汇报结果，这样看板才能展示实时状态。
+
+在你的任务执行代码中，加上以下逻辑：
+
+import time
+
+def run_with_reporting(task_func, task_id, api_key):
+    try:
+        start = time.time()
+        result = task_func()  # 你的任务逻辑
+        elapsed = int((time.time() - start) * 1000)
+        requests.post(f"{BASE}/api/tasks/{task_id}/executions",
+            headers={"Authorization": f"Bearer {api_key}"},
+            json={"status": "success", "duration_ms": elapsed, "log": str(result)})
+    except Exception as e:
+        requests.post(f"{BASE}/api/tasks/{task_id}/executions",
+            headers={"Authorization": f"Bearer {api_key}"},
+            json={"status": "failed", "duration_ms": 0, "error_message": str(e)})
+
+# 使用示例 — 包裹你现有的任务函数：
+run_with_reporting(my_task_function, TASK_ID, API_KEY)
+
+## 第 4 步：保持活跃
+
+定期发送心跳，让系统知道你仍在运行：
+
+requests.post(f"{BASE}/api/agents/{AGENT_ID}/heartbeat",
+    headers={"Authorization": f"Bearer {API_KEY}"})
+
+---
+完成以上步骤后，前往 TaskPulse 看板（本页面）查看你的运行状态和执行历史。如配置了通知渠道，任务超时未执行时系统会自动告警。`
 })
 
 onMounted(async () => {
