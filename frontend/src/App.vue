@@ -1,5 +1,12 @@
 <template>
   <div id="app-container">
+    <!-- Login page: standalone without sidebar -->
+    <template v-if="isLoginPage">
+      <router-view />
+    </template>
+
+    <!-- App pages: with sidebar -->
+    <template v-else>
     <!-- Sidebar -->
     <aside class="sidebar">
       <div class="logo">
@@ -46,22 +53,44 @@
       <header class="topbar">
         <h2 class="page-title">{{ pageTitle }}</h2>
         <div class="topbar-right">
-          <span class="version-badge">v1.0</span>
+          <template v-if="isLoggedIn">
+            <span class="user-name">{{ userName }}</span>
+            <button class="btn-logout" @click="handleLogout">退出</button>
+          </template>
+          <span v-else class="version-badge">v1.0</span>
         </div>
       </header>
       <main class="content">
         <router-view />
       </main>
     </div>
+    </template>
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { computed, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
 const route = useRoute()
+const router = useRouter()
 const currentRoute = computed(() => route.path)
+const isLoginPage = computed(() => route.path === '/login')
+
+const isLoggedIn = computed(() => !!localStorage.getItem('token'))
+const userName = ref('')
+
+// Load user info from localStorage
+try {
+  const userData = JSON.parse(localStorage.getItem('user') || '{}')
+  userName.value = userData.display_name || userData.username || ''
+} catch {}
+
+const handleLogout = () => {
+  localStorage.removeItem('token')
+  localStorage.removeItem('user')
+  router.push('/login')
+}
 
 const routeTitles = {
   '/': '仪表盘',
@@ -194,6 +223,24 @@ const pageTitle = computed(() => routeTitles[route.path] || 'TaskPulse')
   background: rgba(255,255,255,0.06);
   color: rgba(255,255,255,0.4);
   border: 1px solid rgba(255,255,255,0.08);
+}
+.user-name {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.btn-logout {
+  padding: 4px 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.04);
+  color: var(--text-muted);
+  font-size: 12px;
+  cursor: pointer;
+}
+.btn-logout:hover {
+  color: #f87171;
+  border-color: rgba(239,68,68,0.2);
+  background: rgba(239,68,68,0.08);
 }
 
 .content {

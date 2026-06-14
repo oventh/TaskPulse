@@ -5,19 +5,32 @@ import TaskDetail from '../views/TaskDetail.vue'
 import Agents from '../views/Agents.vue'
 import Alerts from '../views/Alerts.vue'
 import Settings from '../views/Settings.vue'
+import Login from '../views/Login.vue'
 
 const routes = [
-  { path: '/', component: Dashboard },
-  { path: '/tasks', component: Tasks },
-  { path: '/tasks/:id', component: TaskDetail, name: 'TaskDetail' },
-  { path: '/agents', component: Agents },
-  { path: '/alerts', component: Alerts },
-  { path: '/settings', component: Settings },
+  { path: '/login', component: Login, meta: { public: true } },
+  { path: '/', component: Dashboard, meta: { requiresAuth: true } },
+  { path: '/tasks', component: Tasks, meta: { requiresAuth: true } },
+  { path: '/tasks/:id', component: TaskDetail, name: 'TaskDetail', meta: { requiresAuth: true } },
+  { path: '/agents', component: Agents, meta: { requiresAuth: true } },
+  { path: '/alerts', component: Alerts, meta: { requiresAuth: true } },
+  { path: '/settings', component: Settings, meta: { requiresAuth: true } },
 ]
 
 const router = createRouter({
   history: createWebHistory(),
   routes,
+})
+
+router.beforeEach((to, from, next) => {
+  const token = localStorage.getItem('token')
+  if (to.meta.requiresAuth && !token) {
+    next('/login')
+  } else if (to.path === '/login' && token) {
+    next('/')
+  } else {
+    next()
+  }
 })
 
 export default router

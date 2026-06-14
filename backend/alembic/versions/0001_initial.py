@@ -100,8 +100,21 @@ def upgrade() -> None:
         sa.Column("updated_at", sa.DateTime, server_default=sa.func.now()),
     )
 
+    op.create_table(
+        "users",
+        sa.Column("id", sa.Integer, primary_key=True, autoincrement=True),
+        sa.Column("username", sa.String(64), unique=True, nullable=False),
+        sa.Column("password_hash", sa.String(256), nullable=False),
+        sa.Column("display_name", sa.String(128), default=""),
+        sa.Column("email", sa.String(128), default=""),
+        sa.Column("is_active", sa.Boolean, default=True),
+        sa.Column("created_at", sa.DateTime, server_default=sa.func.now()),
+        sa.Column("updated_at", sa.DateTime, server_default=sa.func.now()),
+    )
+
 
 def downgrade() -> None:
+    op.drop_table("users")
     op.drop_table("system_config")
     op.drop_table("alerts")
     op.drop_table("alert_rules")

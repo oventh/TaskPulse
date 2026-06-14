@@ -10,14 +10,16 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.api.agents import router as agents_router
+from app.api.auth import router as auth_router
 from app.api.tasks import router as tasks_router
 from app.api.executions import router as executions_router
 from app.api.notifications import router as notifications_router
 from app.api.dashboard import router as dashboard_router
 from app.api.system import router as system_router
 from app.config import settings
-from app.database import engine, Base
+from app.database import engine, Base, async_session_factory
 from app.services.scheduler import SchedulerService
+from app.services.auth import AuthService
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
 logger = logging.getLogger("taskpulse")
@@ -31,6 +33,9 @@ async def lifespan(app: FastAPI):
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     logger.info("Database tables ensured")
+    # Ensure default admin
+    async with async_session_factory() as db:
+        await AuthService.ensure_default_admin(db)
     # Start background scheduler
     task = asyncio.create_task(scheduler.start())
     yield
@@ -49,6 +54,7 @@ app = FastAPI(
 
 # API routers
 app.include_router(agents_router)
+app.include_router(auth_router)
 app.include_router(tasks_router)
 app.include_router(executions_router)
 app.include_router(notifications_router)

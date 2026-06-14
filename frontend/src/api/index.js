@@ -5,6 +5,34 @@ const api = axios.create({
   timeout: 10000,
 })
 
+// Auto-attach token
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token')
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
+  return config
+})
+
+// Auto-redirect on 401
+api.interceptors.response.use(
+  (res) => res,
+  (err) => {
+    if (err.response?.status === 401) {
+      localStorage.removeItem('token')
+      localStorage.removeItem('user')
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login'
+      }
+    }
+    return Promise.reject(err)
+  },
+)
+
+// Auth
+export const login = (data) => api.post('/auth/login', data)
+export const getMe = () => api.get('/auth/me')
+
 // Dashboard
 export const getDashboardSummary = () => api.get('/dashboard/summary')
 export const getDashboardTasks = () => api.get('/dashboard/tasks')
