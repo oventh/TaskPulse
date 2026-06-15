@@ -197,6 +197,13 @@ onMounted(loadData)
   border-bottom: 1px solid var(--border-color);
 }
 .section-header h3 { font-size: 15px; font-weight: 600; color: #e0e0f0; margin: 0; }
+.section-header.collapsible { cursor: pointer; user-select: none; }
+.section-header.collapsible:hover { background: rgba(255,255,255,0.02); }
+.section-toggle {
+  display: flex; align-items: center; gap: 6px;
+  color: var(--text-muted); font-size: 12px;
+}
+.section-toggle:hover { color: var(--text-secondary); }
 
 /* Search */
 .search-bar {

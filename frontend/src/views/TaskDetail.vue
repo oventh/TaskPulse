@@ -92,7 +92,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import dayjs from 'dayjs'
+import { beijing } from '../utils/time.js'
 import { getTask, listExecutions } from '../api/index.js'
 
 const route = useRoute()

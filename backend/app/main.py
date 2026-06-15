@@ -74,7 +74,8 @@ if FRONTEND_DIST.is_dir():
         if not request.url.path.startswith("/api"):
             content = (FRONTEND_DIST / "index.html").read_text(encoding="utf-8")
             return HTMLResponse(content=content, status_code=200)
-        raise exc
+        from fastapi.responses import JSONResponse
+        return JSONResponse(status_code=404, content={"detail": "Not Found"})
 
     logger.info("Frontend SPA mounted from %s", FRONTEND_DIST)
 else:

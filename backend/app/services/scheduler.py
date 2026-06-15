@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import settings
 from app.database import async_session_factory
 from app.models import ScheduledTask, Alert, AlertRule, NotificationChannel
+from app.utils import fmt_bj
 
 logger = logging.getLogger("taskpulse.scheduler")
 
@@ -66,9 +67,9 @@ class SchedulerService:
                     alert_type="missed_run",
                     message=(
                         f"任务 [{task.name}](ID={task.id}) 超过预定时间未执行。\n"
-                        f"预期执行时间: {task.next_run_at}\n"
+                        f"预期执行时间: {fmt_bj(task.next_run_at)}\n"
                         f"容忍窗口: {task.grace_period}s\n"
-                        f"当前时间: {now}"
+                        f"当前时间: {fmt_bj(now)}"
                     ),
                     status="pending",
                 )

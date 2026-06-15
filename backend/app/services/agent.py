@@ -38,6 +38,7 @@ class AgentService:
             if v is not None and hasattr(agent, k):
                 setattr(agent, k, v)
         await self.db.flush()
+        await self.db.refresh(agent)
         return agent
 
     async def heartbeat(self, agent_id: int) -> Agent | None:
@@ -46,6 +47,7 @@ class AgentService:
         if agent:
             agent.last_heartbeat_at = datetime.utcnow()
             await self.db.flush()
+            await self.db.refresh(agent)
         return agent
 
     async def get_task_count(self, agent_id: int) -> int:
