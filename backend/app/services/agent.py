@@ -52,3 +52,11 @@ class AgentService:
         stmt = select(func.count(ScheduledTask.id)).where(ScheduledTask.agent_id == agent_id)
         result = await self.db.execute(stmt)
         return result.scalar() or 0
+
+    async def delete(self, agent_id: int) -> bool:
+        agent = await self.get(agent_id)
+        if agent is None:
+            return False
+        await self.db.delete(agent)
+        await self.db.flush()
+        return True

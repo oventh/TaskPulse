@@ -43,7 +43,10 @@
           <tbody>
             <tr v-for="a in agents" :key="a.id">
               <td class="cell-mono">#{{ a.id }}</td>
-              <td class="cell-name">{{ a.name }}</td>
+              <td>
+                <span class="agent-avatar" :style="{background: $avatar(a.name).bg}">{{ $avatar(a.name).letter }}</span>
+                <span class="cell-name">{{ a.name }}</span>
+              </td>
               <td class="cell-muted">{{ a.description || '—' }}</td>
               <td>
                 <span class="tag" :class="a.status === 'active' ? 'tag-green' : 'tag-gray'">
@@ -51,7 +54,7 @@
                 </span>
               </td>
               <td class="cell-mono">{{ a.task_count }}</td>
-              <td class="cell-mono">{{ a.last_heartbeat_at ? dayjs(a.last_heartbeat_at).format('MM-DD HH:mm') : '—' }}</td>
+              <td class="cell-mono">{{ a.last_heartbeat_at ? dayjs.utc(a.last_heartbeat_at).local().format('MM-DD HH:mm') : '—' }}</td>
               <td>
                 <code class="cell-key">{{ a.api_key.substring(0, 16) }}...</code>
                 <button class="btn-icon" @click="copyKey(a.api_key)" title="复制 API Key">
@@ -60,6 +63,8 @@
               </td>
               <td>
                 <router-link to="/tasks" class="cell-link">任务</router-link>
+                <button class="cell-link-btn" style="color:var(--accent-1)" @click="showEdit(a)">编辑</button>
+                <button class="cell-link-btn" style="color:var(--danger)" @click="confirmDelete(a)">删除</button>
               </td>
             </tr>
             <tr v-if="agents.length === 0">
@@ -70,12 +75,65 @@
       </div>
     </div>
   </div>
+
+  <!-- Edit Agent Modal -->
+  <div v-if="editAgent" class="modal-overlay" @click.self="editAgent = null">
+    <div class="modal">
+      <div class="modal-header">
+        <h4>编辑 Agent</h4>
+        <button class="modal-close" @click="editAgent = null">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="field">
+          <label>Agent 名称</label>
+          <div class="field-avatar-row">
+            <span class="agent-avatar-lg" :style="{background: $avatar(editForm.name).bg}">{{ $avatar(editForm.name).letter }}</span>
+            <input v-model="editForm.name" class="input" placeholder="Agent 名称" />
+          </div>
+        </div>
+        <div class="field">
+          <label>描述</label>
+          <input v-model="editForm.description" class="input" placeholder="描述" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" @click="editAgent = null">取消</button>
+        <button class="btn-primary" @click="handleEdit">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirm Modal -->
+  <div v-if="deleteTarget" class="modal-overlay" @click.self="deleteTarget = null">
+    <div class="modal" style="width:400px">
+      <div class="modal-header">
+        <h4>删除 Agent</h4>
+        <button class="modal-close" @click="deleteTarget = null">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p style="color:var(--text-secondary);font-size:14px;line-height:1.6">
+          确定要删除 Agent <strong style="color:var(--text-primary)">{{ deleteTarget.name }}</strong> 吗？
+        </p>
+        <p style="color:var(--text-muted);font-size:12px;margin-top:8px">
+          其关联的定时任务也将一并删除。Agent 后续仍可重新注册。
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" @click="deleteTarget = null">取消</button>
+        <button class="btn-danger" @click="handleDelete">确认删除</button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import dayjs from 'dayjs'
-import { listAgents, getSystemConfig } from '../api/index.js'
+import { listAgents, updateAgent, deleteAgent, getSystemConfig } from '../api/index.js'
 
 const agents = ref([])
 const tab = ref('curl')
@@ -88,6 +146,40 @@ const loadData = async () => {
   ])
   agents.value = agentRes.data
   baseUrl.value = cfgRes.data.base_url
+}
+
+// Edit
+const editAgent = ref(null)
+const editForm = ref({ name: '', description: '' })
+const showEdit = (agent) => {
+  editForm.value = { name: agent.name, description: agent.description }
+  editAgent.value = agent
+}
+const handleEdit = async () => {
+  try {
+    await updateAgent(editAgent.value.id, editForm.value)
+    editAgent.value = null
+    await loadData()
+    const { ElMessage } = await import('element-plus')
+    ElMessage.success('已更新')
+  } catch (e) {
+    console.error(e)
+  }
+}
+
+// Delete
+const deleteTarget = ref(null)
+const confirmDelete = (agent) => { deleteTarget.value = agent }
+const handleDelete = async () => {
+  try {
+    await deleteAgent(deleteTarget.value.id)
+    deleteTarget.value = null
+    await loadData()
+    const { ElMessage } = await import('element-plus')
+    ElMessage.success('已删除')
+  } catch (e) {
+    console.error(e)
+  }
 }
 
 const copyKey = async (key) => {
@@ -122,7 +214,7 @@ onMounted(loadData)
 </script>
 
 <style scoped>
-.agents-page { max-width: 1200px; }
+.agents-page {}
 .mb-24 { margin-bottom: 24px; }
 
 .section {
@@ -234,4 +326,91 @@ onMounted(loadData)
   vertical-align: middle;
 }
 .btn-icon:hover { color: var(--accent-1); }
+
+/* Modal */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+}
+.modal {
+  width: 480px; max-width: 90vw;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.modal-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 16px 20px; border-bottom: 1px solid var(--border-color);
+}
+.modal-header h4 { font-size: 15px; font-weight: 600; color: #e0e0f0; margin: 0; }
+.modal-close { background: none; border: none; color: var(--text-muted); cursor: pointer; }
+.modal-close:hover { color: #fff; }
+.modal-body { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+.modal-footer {
+  display: flex; justify-content: flex-end; gap: 8px;
+  padding: 16px 20px; border-top: 1px solid var(--border-color);
+}
+
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field label { font-size: 12px; color: var(--text-secondary); }
+.field-avatar-row { display: flex; align-items: center; gap: 12px; }
+.input {
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: rgba(255,255,255,0.04);
+  color: var(--text-primary);
+  font-size: 13px;
+  outline: none;
+}
+.input:focus { border-color: var(--accent-1); }
+
+.agent-avatar-lg {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.btn-primary {
+  padding: 7px 16px; border-radius: 8px;
+  border: none;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: #fff; font-size: 13px; font-weight: 500;
+  cursor: pointer;
+}
+.btn-primary:hover { opacity: 0.9; }
+.btn-secondary {
+  padding: 7px 16px; border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: transparent;
+  color: var(--text-secondary); font-size: 13px;
+  cursor: pointer;
+}
+.btn-secondary:hover { color: #fff; border-color: rgba(255,255,255,0.15); }
+.btn-danger {
+  padding: 7px 16px; border-radius: 8px;
+  border: none;
+  background: rgba(239,68,68,0.8);
+  color: #fff; font-size: 13px; font-weight: 500;
+  cursor: pointer;
+}
+.btn-danger:hover { background: #ef4444; }
+
+.cell-link-btn {
+  background: none; border: none;
+  font-size: 13px; cursor: pointer;
+  margin-left: 8px;
+}
+.cell-link-btn:hover { text-decoration: underline; }
 </style>

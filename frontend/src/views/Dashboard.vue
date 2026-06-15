@@ -117,15 +117,18 @@
           </thead>
           <tbody>
             <tr v-for="t in tasks" :key="t.id">
-              <td><span class="cell-badge">{{ t.agent_name }}</span></td>
+              <td>
+                <span class="agent-avatar" :style="{background: $avatar(t.agent_name).bg}">{{ $avatar(t.agent_name).letter }}</span>
+                <span class="cell-badge">{{ t.agent_name }}</span>
+              </td>
               <td class="cell-name">{{ t.name }}</td>
-              <td><code class="cell-code">{{ t.cron_expression }}</code></td>
+              <td><code class="cell-code" :title="t.cron_expression">{{ $cron(t.cron_expression) }}</code></td>
               <td>
                 <span class="tag" :class="t.status === 'active' ? 'tag-green' : 'tag-gray'">
                   {{ t.status === 'active' ? '运行中' : t.status === 'paused' ? '已暂停' : '已停止' }}
                 </span>
               </td>
-              <td class="cell-mono">{{ t.last_run_at ? dayjs(t.last_run_at).format('MM-DD HH:mm') : '—' }}</td>
+              <td class="cell-mono">{{ t.last_run_at ? dayjs.utc(t.last_run_at).local().format('MM-DD HH:mm') : '—' }}</td>
               <td>
                 <span v-if="t.last_run_result" class="tag" :class="t.last_run_result === 'success' ? 'tag-green' : 'tag-red'">
                   {{ t.last_run_result === 'success' ? '成功' : '失败' }}
@@ -255,7 +258,6 @@ const copyScript = async () => {
 
 <style scoped>
 .dashboard {
-  max-width: 1200px;
 }
 
 /* ── Onboarding Panel ─────────────────────────── */

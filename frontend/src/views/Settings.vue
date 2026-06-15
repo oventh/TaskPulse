@@ -246,7 +246,7 @@ onMounted(loadData)
 </script>
 
 <style scoped>
-.settings-page { max-width: 1200px; }
+.settings-page {}
 .mb-24 { margin-bottom: 24px; }
 
 .section {

@@ -59,6 +59,17 @@ async def heartbeat(agent_id: int, body: AgentHeartbeat, db: AsyncSession = Depe
     return AgentOut(**{**agent.__dict__, "task_count": cnt})
 
 
+@router.delete("/{agent_id}", status_code=204)
+async def delete_agent(agent_id: int, db: AsyncSession = Depends(get_db)):
+    svc = AgentService(db)
+    agent = await svc.get(agent_id)
+    if not agent:
+        raise HTTPException(404, "Agent not found")
+    # Delete all tasks first, then the agent (cascade)
+    await svc.delete(agent_id)
+    await db.commit()
+
+
 # ── Batch registration: AI agent self-registers with all its tasks ─────
 
 @router.post("/register-with-tasks", response_model=AgentBatchRegisterResult, status_code=201)

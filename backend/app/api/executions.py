@@ -20,6 +20,14 @@ async def report_execution(task_id: int, body: ExecutionReport,
     if not task:
         raise HTTPException(404, "Task not found")
 
+    # Verify agent exists and is active
+    agent_svc = AgentService(db)
+    agent = await agent_svc.get(task.agent_id)
+    if not agent:
+        raise HTTPException(410, "Agent已被删除，请重新注册")
+    if agent.status != "active":
+        raise HTTPException(403, "Agent已停用，无法汇报")
+
     exec_svc = ExecutionService(db)
     record = await exec_svc.report_result(
         task_id=task_id,

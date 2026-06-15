@@ -18,6 +18,7 @@ class ScheduledTask(Base):
     cron_expression: Mapped[str] = mapped_column(String(64), nullable=False, comment="Cron 表达式, e.g. */5 * * * *")
     grace_period: Mapped[int] = mapped_column(Integer, default=300, comment="容忍秒数, 超时未执行则告警")
     status: Mapped[str] = mapped_column(String(32), default="active", comment="active / paused / stopped")
+    tags: Mapped[str | None] = mapped_column(Text, nullable=True, comment="标签 JSON 数组, e.g. [\"数据同步\",\"重要\"]")
 
     # 冗余字段方便查询
     last_run_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True, comment="最近一次执行时间")

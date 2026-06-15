@@ -20,7 +20,7 @@
                 {{ a.alert_type === 'missed_run' ? '未按时执行' : '执行失败' }}
               </span>
               <span class="alert-task">{{ a.task_name || '未知任务' }}</span>
-              <span class="alert-time">{{ dayjs(a.created_at).format('MM-DD HH:mm') }}</span>
+              <span class="alert-time">{{ dayjs.utc(a.created_at).local().format('MM-DD HH:mm') }}</span>
             </div>
             <div class="alert-msg">{{ a.message }}</div>
             <div class="alert-bottom">
@@ -68,7 +68,7 @@ onMounted(loadData)
 </script>
 
 <style scoped>
-.alerts-page { max-width: 1200px; }
+.alerts-page {}
 
 .section {
   background: var(--bg-card);

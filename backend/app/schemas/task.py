@@ -10,6 +10,7 @@ class TaskCreate(BaseModel):
     description: str = Field(default="")
     cron_expression: str = Field(..., max_length=64)
     grace_period: int = Field(default=300, ge=0)
+    tags: list[str] = Field(default_factory=list)
 
 
 class TaskUpdate(BaseModel):
@@ -18,6 +19,7 @@ class TaskUpdate(BaseModel):
     cron_expression: str | None = None
     grace_period: int | None = None
     status: str | None = None  # active / paused / stopped
+    tags: list[str] | None = None
 
 
 class TaskOut(BaseModel):
@@ -29,6 +31,7 @@ class TaskOut(BaseModel):
     cron_expression: str
     grace_period: int
     status: str
+    tags: list[str] = Field(default_factory=list)
     last_run_at: datetime | None = None
     last_run_result: str | None = None
     next_run_at: datetime | None = None

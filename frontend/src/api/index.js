@@ -42,9 +42,10 @@ export const listAgents = () => api.get('/agents')
 export const getAgent = (id) => api.get(`/agents/${id}`)
 export const createAgent = (data) => api.post('/agents', data)
 export const updateAgent = (id, data) => api.put(`/agents/${id}`, data)
+export const deleteAgent = (id) => api.delete(`/agents/${id}`)
 
 // Tasks
-export const listTasks = (agentId) => api.get('/tasks', { params: { agent_id: agentId } })
+export const listTasks = (params) => api.get('/tasks', { params })
 export const getTask = (id) => api.get(`/tasks/${id}`)
 export const createTask = (agentId, data) => api.post('/tasks', data, { params: { agent_id: agentId } })
 export const updateTask = (id, data) => api.put(`/tasks/${id}`, data)

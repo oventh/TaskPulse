@@ -230,3 +230,33 @@ html, body, #app {
   border: 1px solid var(--border-color) !important;
   backdrop-filter: blur(12px) !important;
 }
+
+/* Agent Avatar */
+.agent-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  flex-shrink: 0;
+  vertical-align: middle;
+  margin-right: 6px;
+}
+.agent-avatar-sm {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  flex-shrink: 0;
+  vertical-align: middle;
+  margin-right: 4px;
+}

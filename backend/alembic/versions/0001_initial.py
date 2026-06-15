@@ -48,6 +48,7 @@ def upgrade() -> None:
         sa.Column("cron_expression", sa.String(64), nullable=False),
         sa.Column("grace_period", sa.Integer, default=300),
         sa.Column("status", sa.String(32), default="active"),
+        sa.Column("tags", sa.Text, nullable=True),
         sa.Column("last_run_at", sa.DateTime, nullable=True),
         sa.Column("last_run_result", sa.String(32), nullable=True),
         sa.Column("next_run_at", sa.DateTime, nullable=True),
