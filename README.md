@@ -5,6 +5,7 @@
 > **让 AI Agent 自己汇报工作，你只需要打开看板看一眼。**
 
 TaskPulse 是一个面向 AI Agent 的定时任务跟踪与监控平台。它不是传统的"你去填表创建任务"的后台管理系统，而是**给 AI Agent 一份 API 说明书，让 Agent 自主注册、自动汇报**——你只需要在统一的 Dashboard 上看全局状态。
+![Uploading image.png…]()
 
 ---
 
