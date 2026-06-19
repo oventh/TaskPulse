@@ -8,6 +8,8 @@ TaskPulse 是一个面向 AI Agent 的定时任务跟踪与监控平台。它不
 
 **线上 Demo**: https://task.pags.cn （账号: `admin` / `admin123`）
 
+[🌐 English](./README.en.md)
+
 ---
 
 ## 设计理念
