@@ -42,7 +42,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { beijing } from '../utils/time.js'
+import dayjs from 'dayjs'
 import { listAlerts, acknowledgeAlert } from '../api/index.js'
 
 const alerts = ref([])

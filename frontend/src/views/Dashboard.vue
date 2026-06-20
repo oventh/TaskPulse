@@ -152,7 +152,7 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import { beijing } from '../utils/time.js'
+import dayjs from 'dayjs'
 import { getDashboardSummary, getDashboardTasks, getSystemConfig } from '../api/index.js'
 
 const summary = ref({

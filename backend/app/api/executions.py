@@ -1,13 +1,23 @@
 """API router — TaskExecution (reporting + query)."""
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.schemas import ExecutionOut, ExecutionReport
 from app.services import ExecutionService, TaskService, AgentService
+from app.models import TaskExecution
 
 router = APIRouter(prefix="/api/tasks/{task_id}/executions", tags=["executions"])
+
+
+class PaginatedExecutions(BaseModel):
+    items: list[ExecutionOut]
+    total: int
+    page: int
+    page_size: int
 
 
 @router.post("", response_model=ExecutionOut, status_code=201)
@@ -46,16 +56,27 @@ async def report_execution(task_id: int, body: ExecutionReport,
     return ExecutionOut(**record.__dict__)
 
 
-@router.get("", response_model=list[ExecutionOut])
+@router.get("", response_model=PaginatedExecutions)
 async def list_executions(
     task_id: int,
-    limit: int = Query(50, ge=1, le=200),
-    offset: int = Query(0, ge=0),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
 ):
     exec_svc = ExecutionService(db)
-    records = await exec_svc.get_executions(task_id, limit=limit, offset=offset)
-    return [ExecutionOut(**r.__dict__) for r in records]
+    offset = (page - 1) * page_size
+    records = await exec_svc.get_executions(task_id, limit=page_size, offset=offset)
+
+    # Get total count
+    count_stmt = select(func.count()).select_from(TaskExecution).where(TaskExecution.task_id == task_id)
+    total = (await db.execute(count_stmt)).scalar() or 0
+
+    return PaginatedExecutions(
+        items=[ExecutionOut(**r.__dict__) for r in records],
+        total=total,
+        page=page,
+        page_size=page_size,
+    )
 
 
 @router.get("/recent", response_model=list[ExecutionOut])

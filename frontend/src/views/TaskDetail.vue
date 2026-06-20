@@ -72,6 +72,20 @@
           </tbody>
         </table>
       </div>
+      <!-- Pagination -->
+      <div class="pagination" v-if="total > pageSize && totalPages > 1">
+        <span class="page-info">共 {{ total }} 条</span>
+        <div class="page-btns">
+          <button class="page-btn" :disabled="currentPage <= 1" @click="goPage(currentPage - 1)">上一页</button>
+          <template v-for="p in (totalPages || 1)" :key="p">
+            <button v-if="Math.abs(p - currentPage) <= 2 || p === 1 || p === totalPages"
+              class="page-btn" :class="{ active: p === currentPage }"
+              @click="goPage(p)">{{ p }}</button>
+            <span v-else-if="p === currentPage - 3 || p === currentPage + 3" class="page-ellipsis">…</span>
+          </template>
+          <button class="page-btn" :disabled="currentPage >= totalPages" @click="goPage(currentPage + 1)">下一页</button>
+        </div>
+      </div>
     </div>
 
     <!-- Log Dialog -->
@@ -90,9 +104,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { beijing } from '../utils/time.js'
+import dayjs from 'dayjs'
 import { getTask, listExecutions } from '../api/index.js'
 
 const route = useRoute()
@@ -103,14 +117,37 @@ const logVisible = ref(false)
 const currentLog = ref('')
 const logExecution = ref(null)
 
+// Pagination
+const currentPage = ref(1)
+const pageSize = ref(20)
+const total = ref(0)
+const totalPages = computed(() => Math.ceil(total.value / pageSize.value) || 1)
+
+const loadExecutions = async (page) => {
+  try {
+    const res = await listExecutions(taskId, { page, page_size: pageSize.value })
+    const data = res.data || {}
+    executions.value = data.items || []
+    total.value = data.total || 0
+    currentPage.value = data.page || page
+  } catch (e) {
+    console.error(e)
+    executions.value = []
+  }
+}
+
+const goPage = (p) => {
+  if (p < 1 || p > totalPages.value) return
+  loadExecutions(p)
+}
+
 onMounted(async () => {
   try {
-    const [taskRes, execRes] = await Promise.all([
+    const [taskRes] = await Promise.all([
       getTask(taskId),
-      listExecutions(taskId, { limit: 100 }),
     ])
     task.value = taskRes.data
-    executions.value = execRes.data
+    await loadExecutions(1)
   } catch (e) {
     console.error(e)
   }
@@ -243,4 +280,40 @@ const showLog = (row) => {
   word-break: break-all;
   margin: 0;
 }
+
+/* ── Pagination ──────────────────────────── */
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  border-top: 1px solid var(--border-color);
+}
+.page-info {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.page-btns {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.page-btn {
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.page-btn:hover { border-color: var(--accent-1); color: var(--accent-1); }
+.page-btn.active {
+  background: var(--accent-1);
+  border-color: var(--accent-1);
+  color: #fff;
+}
+.page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.page-ellipsis { color: var(--text-muted); font-size: 12px; padding: 0 2px; }
 </style>
