@@ -6,7 +6,6 @@
 
 TaskPulse is a tracking and monitoring platform designed for AI agents' scheduled tasks. Unlike traditional CRUD-heavy admin panels, TaskPulse is **AI-native**: give your agents an API spec, and they autonomously register themselves, report execution results, and update their status — no manual form-filling required.
 
-**Live Demo**: https://task.pags.cn (login: `admin` / `admin123`)
 
 [📖 中文文档](./README.md)
 
